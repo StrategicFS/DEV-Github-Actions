@@ -2,7 +2,7 @@ name: 'Zip Deploy'
 description: 'Zip deploy to an App Service / Func App / Standard Logic App zip deploy endpoint'
 inputs:
   app-name:  # id of input
-    description: 'The Azure resource name of the app service to deploy to. Ex: "app-e1-dev-someproduct-somescope"'
+    description: 'The Azure resource name of the app service to deploy to.'
     required: true
 runs:
   using: "composite"
