@@ -5,9 +5,9 @@ inputs:
     description: 'The Azure resource name of the app service to deploy to.'
     required: true
   package-location:
-    description: 'The relative path to the zip package to deploy, if not in the current directory. Include the trailing slash.'
+    description: 'The relative path to the zip package to deploy, if not in the current directory. Do not include the trailing slash.'
     required: false
-    default: './'
+    default: '.'
 runs:
   using: "composite"
   steps:
@@ -23,4 +23,4 @@ runs:
       publishInfo=$(curl -X POST https://management.azure.com${app_id}/config/publishingcredentials/list?api-version=2019-08-01 -H "Authorization: Bearer $token" -H "Content-Type: application/json" -H "Content-Length: 0")
       publishName=$(jq -r '.properties.publishingUserName' <<<$publishInfo)
       publishPass=$(jq -r '.properties.publishingPassword' <<<$publishInfo)
-      curl -XPOST --fail -u "$publishName:$publishPass" --data-binary @"${{ inputs.package-location }}${{ inputs.app-name }}.zip" "https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy"
+      curl -XPOST --fail -u "$publishName:$publishPass" --data-binary @"${{ inputs.package-location }}/${{ inputs.app-name }}.zip" "https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy"
