@@ -18,6 +18,7 @@ runs:
   - name: deploy
     shell: bash
     run: |
+      pwd
       env
       echo ${{ env.HOME }} is the home dir
       if [ ${{inputs.local-development }} ]; 
