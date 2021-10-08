@@ -18,7 +18,7 @@ runs:
   - name: deploy
     shell: bash
     run: |
-      if [ ${{inputs.local-development }}; 
+      if [ ${{inputs.local-development }} ]; 
         then token=$(az account get-access-token | jq -r .access_token)
         else token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
       fi
