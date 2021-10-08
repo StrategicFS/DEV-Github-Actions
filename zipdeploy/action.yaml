@@ -8,13 +8,28 @@ inputs:
     description: 'The relative path to the zip package to deploy, if not in the current directory. Do not include the trailing slash.'
     required: false
     default: '.'
+  local-development:
+    description: 'Used for running this action on a runner connected to GitHub via a developer machine. For dev purposes only.'
+    required: false
+    default: false
 runs:
   using: "composite"
   steps:
+  - mask-token:
+    run: echo "::add-mask::$token"
+  - get-token:
+    if: ${{ inputs.local-development == false }}
+    run: |
+      token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
+      echo "token=$token" >> $GITHUB_ENV
+  - get-token-local:
+    if: ${{ inputs.local-development == true }}
+    run: |
+      token=$(az account get-access-token | jq -r .access_token)
+      echo "token=$token" >> $GITHUB_ENV
   - name: deploy
     shell: bash
     run: |
-      token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
       subscriptions=$(curl -X GET https://management.azure.com/subscriptions?api-version=2020-01-01 -H "Authorization: Bearer $token" | jq  -r '.value[].subscriptionId')
       for sub in $subscriptions; do
         app_id=$(curl -X GET "https://management.azure.com/subscriptions/$sub/resources?api-version=2021-04-01" -H "Authorization: Bearer $token" -H "Content-Type: application/json" | jq -r '.value[] | select(.name=="${{ inputs.app-name }}" and .type=="Microsoft.Web/sites") | .id')
