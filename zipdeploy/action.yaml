@@ -19,7 +19,7 @@ runs:
     shell: bash
     run: |
       if [ ${{inputs.local-development }} ]; 
-        then curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash; token=$(az account get-access-token | jq -r .access_token)
+        then curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash; az login --identity && token=$(az account get-access-token | jq -r .access_token)
         else token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
       fi
       subscriptions=$(curl -X GET https://management.azure.com/subscriptions?api-version=2020-01-01 -H "Authorization: Bearer $token" | jq  -r '.value[].subscriptionId')
