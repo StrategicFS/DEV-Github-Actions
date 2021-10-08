@@ -16,14 +16,17 @@ runs:
   using: "composite"
   steps:
   - name: mask-token
+    shell: bash
     run: echo "::add-mask::$token"
   - name: get-token
     if: ${{ inputs.local-development == false }}
+    shell: bash
     run: |
       token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
       echo "token=$token" >> $GITHUB_ENV
   - name: get-token-local
     if: ${{ inputs.local-development == true }}
+    shell: bash
     run: |
       token=$(az account get-access-token | jq -r .access_token)
       echo "token=$token" >> $GITHUB_ENV
