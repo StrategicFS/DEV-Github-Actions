@@ -18,7 +18,7 @@ runs:
   - name: deploy
     shell: bash
     run: |
-      echo $HOME is the home dir
+      echo ${{ env.HOME }} is the home dir
       if [ ${{inputs.local-development }} ]; 
         then;
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
