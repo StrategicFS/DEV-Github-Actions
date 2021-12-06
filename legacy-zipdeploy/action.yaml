@@ -16,4 +16,4 @@ runs:
   - name: deploy
     shell: bash
     run: |
-      curl -X POST --fail -u '${{ inputs.deploy-credentials }}' --data-binary "${{ inputs.package-path }}" 'https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy'            
+      curl -X POST --fail -u '${{ inputs.deploy-credentials }}' --data-binary @"${{ inputs.package-path }}" 'https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy'            
