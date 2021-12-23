@@ -13,4 +13,4 @@ runs:
   steps:
   - name: deploy
     shell: bash
-    run: echo "::set-output name=APP_NAME::${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }}"
+    run: echo "::set-output name=APP_NAME::$(${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }})"
