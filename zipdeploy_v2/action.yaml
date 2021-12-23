@@ -2,15 +2,11 @@ name: 'Get Traffic Manager Staging Endpoint'
 description: 'Returns the App Service backing the current active endpoint for the Traffic Manager Profile name supplied.'
 inputs:
   tm-name:
-    description: 'The Azure resource name of the Traffic Manager Profile to deploy to.'
+    description: 'The Azure resource name of the (Staging) Traffic Manager Profile to deploy to.'
     required: true
   package-location: 
     description: 'The path/filename to the deployment package, relative to the working directory.'
     required: true
-outputs:
-  app-name:
-    description: 'The Azure resource name of the App Service the active endpoint belonging staging Traffic Manager profile is pointing to.'
-    value: ${{ steps.get-endpoint.outputs.app-name}}
 runs:
   using: "composite"
   steps:
