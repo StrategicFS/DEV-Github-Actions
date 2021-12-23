@@ -15,5 +15,5 @@ runs:
     id: get-endpoint
     shell: bash
     run: |
-      APP_NAME=${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }}
+      APP_NAME=$(${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }})
       echo ::set-output name=app-name::${APP_NAME}
