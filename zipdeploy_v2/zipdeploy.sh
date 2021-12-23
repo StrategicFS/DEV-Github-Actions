@@ -17,7 +17,7 @@ if [[ -z $token ]];
     else
         subscriptions=$(curl -X GET https://management.azure.com/subscriptions?api-version=2020-01-01 -H "Authorization: Bearer $token" | jq  -r '.value[].subscriptionId')
         for sub in $subscriptions; do
-            app_id=$(curl -X GET "https://management.azure.com/subscriptions/$sub/resources?api-version=2021-04-01" -H "Authorization: Bearer $token" -H "Content-Type: application/json" | jq -r '.value[] | select(.name=="${APP_NAME}" and .type=="Microsoft.Web/sites") | .id')
+            app_id=$(curl -X GET "https://management.azure.com/subscriptions/$sub/resources?api-version=2021-04-01" -H "Authorization: Bearer $token" -H "Content-Type: application/json" | jq -r ".value[] | select(.name==\"${APP_NAME}\" and .type==\"Microsoft.Web/sites\") | .id")
         if [[ $app_id != "" ]]; then break; fi
         done
         publishInfo=$(curl -X POST https://management.azure.com${app_id}/config/publishingcredentials/list?api-version=2019-08-01 -H "Authorization: Bearer $token" -H "Content-Type: application/json" -H "Content-Length: 0")
