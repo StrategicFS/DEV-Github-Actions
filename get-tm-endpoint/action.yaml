@@ -14,6 +14,4 @@ runs:
   - name: Deploy to enabled Staging Traffic Manager endpoint.
     id: get-endpoint
     shell: bash
-    run: |
-      APP_NAME=${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }})
-      ::set-output name=app-name::$(echo $APP_NAME)
+    run: APP_NAME=${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }}); ::set-output name=app-name::$(echo $APP_NAME)
