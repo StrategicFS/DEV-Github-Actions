@@ -26,4 +26,4 @@ runs:
       publishInfo=$(curl -X POST https://management.azure.com${app_id}/config/publishingcredentials/list?api-version=2019-08-01 -H "Authorization: Bearer $token" -H "Content-Type: application/json" -H "Content-Length: 0")
       publishName=$(jq -r '.properties.publishingUserName' <<<$publishInfo)
       publishPass=$(jq -r '.properties.publishingPassword' <<<$publishInfo)
-      curl -XPOST --fail -u "$publishName:$publishPass" --data-binary @"${{ inputs.package-filename }}.zip" "https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy"
+      curl -XPOST --fail -u "$publishName:$publishPass" --data-binary @"${{ inputs.package-filename }}" "https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy"
