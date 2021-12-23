@@ -22,7 +22,7 @@ runs:
         app_id=$(curl -X GET "https://management.azure.com/subscriptions/$sub/resources?api-version=2021-04-01" -H "Authorization: Bearer $token" -H "Content-Type: application/json" | jq -r ".value[] | select(.name==\"${APP_NAME}\" and .type==\"Microsoft.Web/sites\") | .id")
         if [[ $app_id != "" ]]; then break; fi
       done
-      if [[ $app_id != "" ]]; then echo "error: app not found"; exit 1; fi
+      if [[ $app_id == "" ]]; then echo "error: app not found"; exit 1; fi
       publishInfo=$(curl -X POST https://management.azure.com${app_id}/config/publishingcredentials/list?api-version=2019-08-01 -H "Authorization: Bearer $token" -H "Content-Type: application/json" -H "Content-Length: 0")
       publishName=$(jq -r '.properties.publishingUserName' <<<$publishInfo)
       publishPass=$(jq -r '.properties.publishingPassword' <<<$publishInfo)
