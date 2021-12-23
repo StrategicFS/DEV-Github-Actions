@@ -32,8 +32,7 @@ TM_DEPLOYMENT_TARGET_COUNT=$(jq -r ".deploymentTargets | length"  <<<$TM_PROFILE
 TM_DEPLOYMENT_TARGET_COLOR=$(jq -r -c "[ .deploymentTargets[].name ]"  <<<$TM_PROFILE)
 if [[ $TM_DEPLOYMENT_TARGET_COUNT -eq 1 ]];
     then 
-        echo "will deploy to $TM_DEPLOYMENT_TARGET_COLOR"
-        echo "will deploy to: $TM_DEPLOYMENT_TARGET_APP_NAME"
+        echo $TM_DEPLOYMENT_TARGET_APP_NAME
     elif [[ $TM_DEPLOYMENT_TARGET_COUNT -gt 1 ]]; 
         then 
         echo "error: expected 1 deployment target, got ${TM_DEPLOYMENT_TARGET_COUNT}: $TM_DEPLOYMENT_TARGET_COLOR"
@@ -46,5 +45,3 @@ if [[ $TM_DEPLOYMENT_TARGET_COUNT -eq 1 ]];
         echo "error: you may not be logged in to the azure cli. expected expected a number, got: $TM_DEPLOYMENT_TARGET_COUNT"
         exit 1
 fi
-# Pass stuff to deploy action
-if [[ -e "$token" ]]; then echo echo ::set-output name=app-name::${TM_DEPLOYMENT_TARGET_APP_NAME}; fi
