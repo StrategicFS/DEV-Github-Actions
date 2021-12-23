@@ -47,4 +47,4 @@ if [[ $TM_DEPLOYMENT_TARGET_COUNT -eq 1 ]];
         exit 1
 fi
 # Pass stuff to deploy action
-if [[ -e "$token" ]]; then echo $TM_DEPLOYMENT_TARGET_APP_NAME; fi
+if [[ -e "$token" ]]; then echo echo ::set-output name=app-name::${TM_DEPLOYMENT_TARGET_APP_NAME}; fi
