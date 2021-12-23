@@ -33,7 +33,7 @@ runs:
           then
               echo "info: will deploy to $TM_DEPLOYMENT_TARGET_COLOR" 
               echo "info: will deploy to $TM_DEPLOYMENT_TARGET_APP_NAME" 
-              ::set-output name=app-name::$(echo $TM_DEPLOYMENT_TARGET_APP_NAME)
+              echo ::set-output name=app-name::$(echo $TM_DEPLOYMENT_TARGET_APP_NAME)
           elif [[ $TM_DEPLOYMENT_TARGET_COUNT -gt 1 ]]; 
               then 
               echo "error: expected 1 deployment target, got ${TM_DEPLOYMENT_TARGET_COUNT}: $TM_DEPLOYMENT_TARGET_COLOR"
