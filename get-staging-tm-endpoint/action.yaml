@@ -14,5 +14,5 @@ runs:
   - name: deploy
     shell: bash
     run: |
-      echo "::set-output name=app-name::$(${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }})"
-      echo "::set-output name=app-name::app-e1-dev-devops-test-green"
+      echo ::set-output name=app-name::$(${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }})
+      echo ::set-output name=app-name::app-e1-dev-devops-test-green
