@@ -12,7 +12,8 @@ runs:
   using: "composite"
   steps:
   - name: deploy
+    id: get-endpoint
     shell: bash
     run: |
-      echo ::set-output name=app-name::$(${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }})
-      echo ::set-output name=app-name::app-e1-dev-devops-test-green
+      APP_NAME=${{ github.action_path }}/get-endpoint.sh ${{ inputs.tm-name }}
+      echo ::set-output name=app-name::${APP_NAME}
