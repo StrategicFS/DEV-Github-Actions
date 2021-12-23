@@ -27,7 +27,6 @@ if [[ -z $token ]];
         done
         if [[ -z $TM_PROFILE ]]; then echo "error: traffic manager profile not found."; exit 1; fi
         TM_DEPLOYMENT_TARGET_APP_NAME=$(jq -r -c ".deploymentTargets[].properties | .target"  <<<$TM_PROFILE | cut -d . -f1 )
-        echo "::set-output name=APP_NAME::$TM_DEPLOYMENT_TARGET_APP_NAME"        
 fi
 TM_DEPLOYMENT_TARGET_COUNT=$(jq -r ".deploymentTargets | length"  <<<$TM_PROFILE)
 TM_DEPLOYMENT_TARGET_COLOR=$(jq -r -c "[ .deploymentTargets[].name ]"  <<<$TM_PROFILE)
@@ -48,3 +47,4 @@ if [[ $TM_DEPLOYMENT_TARGET_COUNT -eq 1 ]];
         exit 1
 fi
 # Pass stuff to deploy action
+if [[ -e "$token" ]]; then echo $TM_DEPLOYMENT_TARGET_APP_NAME; fi
