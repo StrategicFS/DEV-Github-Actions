@@ -13,4 +13,6 @@ runs:
   steps:
   - name: deploy
     shell: bash
-    run: ./get-endpoint.sh ${{ inputs.tm-name }}
+    run: |
+      ls
+      ./get-endpoint.sh ${{ inputs.tm-name }}
