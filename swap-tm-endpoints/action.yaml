@@ -1,0 +1,108 @@
+name: "Swap Traffic Manager Endpoints"
+description: "Enables the passed endpoint and disables the other endpoints within a Traffic Manager Profile"
+inputs:
+  tm-id:
+    description: "Azure Resource ID of the Traffic Manager Profile"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: "Swap Traffic Manager Profile Endpoints"
+      id: swap-endpoint
+      shell: bash
+      run: |
+        set_enabled_endpoints () {
+          local endpoints=("$@")
+
+          for endpoint in "${endpoints[@]}"
+          do
+            endpoint_status="$(jq -r '.status' <<<"$endpoint")"
+            if [ "${endpoint_status}" == "Enabled" ]
+            then
+              endpoint_id="$(jq -r '.id' <<<"$endpoint")"
+              ENABLED_ENDPOINTS+=("$endpoint")
+            fi
+          done
+        }
+
+        set_disabled_endpoints () {
+          local endpoints=("$@")
+
+          for endpoint in "${endpoints[@]}"
+          do
+            endpoint_status="$(jq -r '.status' <<<"$endpoint")"
+            if [ "${endpoint_status}" == "Disabled" ]
+            then
+              endpoint_id="$(jq -r '.id' <<<"$endpoint")"
+              DISABLED_ENDPOINTS+=("$endpoint")
+            fi
+          done
+        } 
+
+        enable_endpoint () {
+          local endpoint=$1
+          local endpoint_id="$(jq -r '.id' <<<"$endpoint")"
+          local endpoint_name="$(jq -r '.name' <<<"$endpoint")"
+          local request_url="https://management.azure.com$endpoint_id?api-version=2018-04-01"
+          local request_body="{\"id\": \"${endpoint_id}\", \"name\": \"${endpoint_name}\", \"type\": \"Microsoft.Network/trafficManagerProfiles/externalEndpoints\", \"properties\": { \"endpointStatus\": \"Enabled\"}}"
+
+          local request_response=$(curl -X PATCH "${request_url}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" --data "${request_body}")
+          echo "${request_response}"
+
+        }
+
+        enable_endpoints () {
+          local endpoints=("$@")
+
+          for endpoint in "${endpoints[@]}"
+          do
+            enable_endpoint "${endpoint}"
+          done
+        }
+
+        disable_endpoint () {
+          local endpoint=$1
+          local endpoint_id="$(jq -r '.id' <<<"$endpoint")"
+          local endpoint_name="$(jq -r '.name' <<<"$endpoint")"
+          local request_url="https://management.azure.com$endpoint_id?api-version=2018-04-01"
+          local request_body="{\"id\": \"${endpoint_id}\", \"name\": \"${endpoint_name}\", \"type\": \"Microsoft.Network/trafficManagerProfiles/externalEndpoints\", \"properties\": { \"endpointStatus\": \"Disabled\"}}"
+
+          local request_response=$(curl -X PATCH "${request_url}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" --data "${request_body}")
+          echo "${request_response}"
+
+        }
+
+        disable_endpoints () {
+          local endpoints=("$@")
+
+          for endpoint in "${endpoints[@]}"
+          do
+            disable_endpoint "${endpoint}"
+          done
+        }
+
+        PROFILE_ID=${{ inputs.tm-id }}
+        echo "Generating token for GitHub Runner"
+        ACCESS_TOKEN=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
+
+        PROFILE_ATTRIBUTES=$(curl -X GET "https://management.azure.com$PROFILE_ID?api-version=2018-04-01" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json")
+
+        declare -a ARRAY
+        declare -a ENABLED_ENDPOINTS
+        declare -a DISABLED_ENDPOINTS
+
+        for endpoint in $(jq -c -r '.properties.endpoints[] | {name: .name, id: .id, status: .properties.endpointStatus}' <<<"$PROFILE_ATTRIBUTES")
+        do 
+          ARRAY+=($endpoint)
+        done
+
+        set_enabled_endpoints "${ARRAY[@]}"
+        set_disabled_endpoints "${ARRAY[@]}"
+
+        if [ ${#ENABLED_ENDPOINTS[@]} -gt 0 ] && [ ${#DISABLED_ENDPOINTS[@]} -gt 0 ]
+        then
+          enable_endpoints "${DISABLED_ENDPOINTS[@]}"
+          disable_endpoints "${ENABLED_ENDPOINTS[@]}"
+        else
+          echo "Failed to swap endpoints. Either there are no disabled endpoints or no enabled endpoints"
+        fi
