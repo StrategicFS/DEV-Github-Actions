@@ -99,7 +99,7 @@ runs:
         set_enabled_endpoints "${ARRAY[@]}"
         set_disabled_endpoints "${ARRAY[@]}"
 
-        if [ ${#ENABLED_ENDPOINTS[@]} -gt 0 && ${#DISABLED_ENDPOINTS[@]} -gt 0 ]
+        if [ ${#ENABLED_ENDPOINTS[@]} -gt 0 ] && [ ${#DISABLED_ENDPOINTS[@]} -gt 0 ]
         then
           enable_endpoints "${DISABLED_ENDPOINTS[@]}"
           disable_endpoints "${ENABLED_ENDPOINTS[@]}"
