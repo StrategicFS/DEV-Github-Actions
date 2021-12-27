@@ -4,6 +4,7 @@ inputs:
   tm-id:
     description: "Azure Resource ID of the Traffic Manager Profile"
     required: true
+runs:
   using: "composite"
   steps:
     - name: "Swap Traffic Manager Profile Endpoints"
