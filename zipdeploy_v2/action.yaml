@@ -14,7 +14,7 @@ runs:
     shell: bash
     run: |
       TM_ID=${{ inputs.tm-id }}
-      PACKAGE_PATH=${{ inputs.package-filename }}
+      PACKAGE_LOCATION=${{ inputs.package-filename }}
       token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
       ENDPOINT_INFO=$(curl -H "Authorization: Bearer $token" -H "Content-Type: application/json" -X GET https://management.azure.com${TM_ID}?api-version=2018-04-01 | jq -r '{ host:  .properties.monitorConfig.customHeaders[] | select(.name=="host").value, endpoints: [ .properties.endpoints[].properties | select(.endpointStatus=="Enabled") ] }')
       SUBSCRIPTION_ID=$(echo $ENDPOINT_INFO | jq -r '.endpoints[0].targetResourceId ' | cut -d '/' -f3)
