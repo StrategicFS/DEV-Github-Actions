@@ -24,7 +24,7 @@ for app in ${APPS[*]}; do
 done
 CREDENTIALS=(); for app_id in ${APP_IDS[*]}; do  app_creds=$(curl -H "Authorization: Bearer $token" -H "Content-Type: application/json" -X POST https://management.azure.com$app_id/config/publishingcredentials/list?api-version=2021-02-01 -d '' | jq -r .properties.scmUri); CREDENTIALS+=($app_creds); done
 for cred in ${CREDENTIALS[*]}; do
-  curl -X POST --fail --data-binary @"${PACKAGE_LOCATION}" "$cred"
+  curl -X POST --fail --data-binary @"${PACKAGE_LOCATION}" "$cred"/api/zipdeploy
 done
 
   
