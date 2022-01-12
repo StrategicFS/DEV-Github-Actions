@@ -74,7 +74,7 @@ enable_endpoint () {
   local endpoint_id="$(jq -r '.id' <<<"$endpoint")"
   local endpoint_name="$(jq -r '.name' <<<"$endpoint")"
   local request_url="https://management.azure.com$endpoint_id?api-version=2018-04-01"
-  local request_body="{\"id\": \"${endpoint_id}\", \"name\": \"${endpoint_name}\", \"type\": \"Microsoft.Network/trafficManagerProfiles/externalEndpoints\", \"properties\": { \"endpointStatus\": \"Enabled\"}}"
+  local request_body="{\"id\": \"${endpoint_id}\", \"name\": \"${endpoint_name}\", \"type\": \"Microsoft.Network/trafficManagerProfiles/azureEndpoints\", \"properties\": { \"endpointStatus\": \"Enabled\"}}"
 
   local request_response=$(curl -X PATCH "${request_url}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" --data "${request_body}")
   echo "${request_response}"
@@ -86,7 +86,7 @@ disable_endpoint () {
   local endpoint_id="$(jq -r '.id' <<<"$endpoint")"
   local endpoint_name="$(jq -r '.name' <<<"$endpoint")"
   local request_url="https://management.azure.com$endpoint_id?api-version=2018-04-01"
-  local request_body="{\"id\": \"${endpoint_id}\", \"name\": \"${endpoint_name}\", \"type\": \"Microsoft.Network/trafficManagerProfiles/externalEndpoints\", \"properties\": { \"endpointStatus\": \"Disabled\"}}"
+  local request_body="{\"id\": \"${endpoint_id}\", \"name\": \"${endpoint_name}\", \"type\": \"Microsoft.Network/trafficManagerProfiles/azureEndpoints\", \"properties\": { \"endpointStatus\": \"Disabled\"}}"
 
   local request_response=$(curl -X PATCH "${request_url}" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" --data "${request_body}")
   echo "${request_response}"
