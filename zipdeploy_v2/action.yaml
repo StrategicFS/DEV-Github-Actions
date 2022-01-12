@@ -1,29 +1,49 @@
-name: 'Zip Deploy'
-description: 'Zip deploy to an App Service / Func App / Standard Logic App zip deploy endpoint'
+name: 'Zip Deploy to Traffic Manager Managed App'
+description: 'Zip deploy to an App Service, Func App, or Logic App (Standard) that is accessed via a STANDBY Traffic Manager / App Gateway'
 inputs:
-  app-name:
-    description: 'The Azure resource name of the app service to deploy to.'
+  tm-id:
+    description: 'The resource ID of the Traffic Manager Profile the App is behind.'
     required: true
   package-filename:
-    description: 'The relative path/filename to the zip package to deploy, if not in the current directory. Do not include the trailing slash.'
-    required: false
-    default: './package.zip'
+    description: 'The relative path/filename to the zip package to deploy. "./package.zip" or "./project/something/blah.zip" '
+    required: true
 runs:
   using: "composite"
   steps:
-  - name: deploy
+  - name: deploy to standby traffic manager fronted app
     shell: bash
     run: |
-      APP_NAME=${{ inputs.app-name }}
-      PACKAGE_NAME=${{ inputs.package-filename }}
-      token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
-      subscriptions=$(curl -X GET https://management.azure.com/subscriptions?api-version=2020-01-01 -H "Authorization: Bearer $token" | jq  -r '.value[].subscriptionId')
-      for sub in $subscriptions; do
-        app_id=$(curl -X GET "https://management.azure.com/subscriptions/$sub/resources?api-version=2021-04-01" -H "Authorization: Bearer $token" -H "Content-Type: application/json" | jq -r ".value[] | select(.name==\"${APP_NAME}\" and .type==\"Microsoft.Web/sites\") | .id")
-        if [[ $app_id != "" ]]; then break; fi
+      TM_ID=${{ inputs.tm-id }}
+      PACKAGE_LOCATION=${{ inputs.package-filename }}
+      echo "Pulling token"
+      if [ -z "$3" ]
+      then
+        echo "Pulling token for GitHub Runner"
+        token=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
+      else
+        echo "Pulling token for Local Machine"
+        token=$(az account get-access-token --resource "https://management.azure.com" | jq -r '.accessToken')
+      fi
+      ENDPOINT_INFO=$(curl -H "Authorization: Bearer $token" -H "Content-Type: application/json" -X GET https://management.azure.com${TM_ID}?api-version=2018-04-01 | jq -r '{ host:  .properties.monitorConfig.customHeaders[] | select(.name=="host").value, endpoints: [ .properties.endpoints[].properties | select(.endpointStatus=="Enabled") ] }')
+      SUBSCRIPTION_ID=$(echo $ENDPOINT_INFO | jq -r '.endpoints[0].targetResourceId ' | cut -d '/' -f3)
+      HOST=$(jq -r .host <<<$ENDPOINT_INFO)
+      IP_ID=$(jq -r '.endpoints[0].targetResourceId' <<<$ENDPOINT_INFO)
+      ALL_GATEWAYS=$(curl -X GET -H "Authorization: Bearer $token" -H "Content-Type: application/json" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.Network/applicationGateways?api-version=2021-03-01 )
+      TARGET_ENDPOINTS=$(jq -r ".value[] | select(.properties.frontendIPConfigurations[].properties.publicIPAddress.id==\"$IP_ID\") | (.properties.httpListeners[] | if (.properties.hostNames | index(\"$HOST\") != null) and .properties.protocol == \"Https\" then .id else empty end) as \$listener_id | ( .properties.requestRoutingRules[].properties | select(.httpListener.id==\$listener_id).backendAddressPool.id ) as \$backend_id | .properties.backendAddressPools[] | select(.id==\$backend_id) | .properties.backendAddresses[].fqdn " <<<$ALL_GATEWAYS)
+      APP_HOSTNAMES=()
+      for app in ${TARGET_ENDPOINTS}; do
+        APPS+=($app)
       done
-      if [[ $app_id == "" ]]; then echo "error: app not found"; exit 1; fi
-      publishInfo=$(curl -X POST https://management.azure.com${app_id}/config/publishingcredentials/list?api-version=2019-08-01 -H "Authorization: Bearer $token" -H "Content-Type: application/json" -H "Content-Length: 0")
-      publishName=$(jq -r '.properties.publishingUserName' <<<$publishInfo)
-      publishPass=$(jq -r '.properties.publishingPassword' <<<$publishInfo)
-      curl -XPOST --fail -u "$publishName:$publishPass" --data-binary @"${{ inputs.package-filename }}" "https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy"
+      APP_IDS=()
+      for app in ${APPS[*]}; do 
+        id=$(curl -H "Authorization: Bearer $token" -H "Content-Type: application/json" -X GET "https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Web/sites?api-version=2021-02-01" | jq -r  ".value[] | if (.properties.enabledHostNames | index(\"$app\") != null ) then .id else empty end") 
+        APP_IDS+=($id)
+      done
+      CREDENTIALS=()
+      for app_id in ${APP_IDS[*]}; do  app_creds=$(curl -H "Authorization: Bearer $token" -H "Content-Type: application/json" -X POST https://management.azure.com$app_id/config/publishingcredentials/list?api-version=2021-02-01 -d '' | jq -r .properties.scmUri); CREDENTIALS+=($app_creds); done
+      for cred in ${CREDENTIALS[*]}; do
+        curl -X POST --fail --data-binary @"${PACKAGE_LOCATION}" "$cred"/api/zipdeploy
+      done
+
+  
+
