@@ -18,7 +18,7 @@ IP_ID=$(jq -r '.endpoints[0].targetResourceId' <<<$ENDPOINT_INFO)
 # IP_IDS is not yet implemented, will be used when deploying to multiple targets
 #IP_IDS=$(jq -r '.endpoints[].targetResourceId' <<<$ENDPOINT_INFO)
 ALL_GATEWAYS=$(curl -X GET -H "Authorization: Bearer $token" -H "Content-Type: application/json" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/providers/Microsoft.Network/applicationGateways?api-version=2021-03-01 )
-TARGET_ENDPOINTS=$(jq -r ".value[] | select(.properties.frontendIPConfigurations[].properties.publicIPAddress.id==\"$IP_ID\") | (.properties.httpListeners[] | if (.properties.hostNames | index(\"$HOST\") != null) and .properties.protocol == \"Https\" then .id else empty end) as \$listener_id | ( .properties.requestRoutingRules[].properties | select(.httpListener.id==\$listener_id).backendAddressPool.id ) as \$backend_id | .properties.backendAddressPools[] | select(.id==\$backend_id) | .properties.backendAddresses[].fqdn " <<<$ALL_GATEWAYS)
+TARGET_ENDPOINTS=$(jq -r ".value[] | select(.properties.frontendIPConfigurations[].properties.publicIPAddress.id==\"$IP_ID\") | (.properties.httpListeners[] | if (.properties.hostName | index(\"$HOST\") != null) and .properties.protocol == \"Https\" then .id else empty end) as \$listener_id | ( .properties.requestRoutingRules[].properties | select(.httpListener.id==\$listener_id).backendAddressPool.id ) as \$backend_id | .properties.backendAddressPools[] | select(.id==\$backend_id) | .properties.backendAddresses[].fqdn " <<<$ALL_GATEWAYS)
 APP_HOSTNAMES=()
 for app in ${TARGET_ENDPOINTS}; do
   APPS+=($app)
