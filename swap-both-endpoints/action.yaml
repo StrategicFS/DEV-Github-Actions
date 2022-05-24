@@ -1,0 +1,19 @@
+name: 
+
+on:
+    workflow_call:
+        secrets:
+            tm-id:
+                required: true
+
+jobs:
+  swap-active-endpoints:
+    runs-on: [self-hosted, development]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: swap
+      uses: StrategicFS/DEV-Github-Actions/swap-tm-endpoints@master
+      with:
+        tm-id: ${{ secrets.tm-id }}
