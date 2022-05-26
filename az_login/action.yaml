@@ -4,7 +4,7 @@ name: 'Run AZ Login'
 description: 'Login to the AZ CLI, allows scripts to use DefaultAzureCredential'
 inputs:
   version:
-    description: 'The AZ CLI version to use. in the format "xx.yy.zz", such as "2.36.0"'
+    description: 'The AZ CLI version to use. in the format "xx.yy.zz", such as "2.36.0". Logs in automatically, no further action needed.'
     required: true
 runs:
   using: "composite"
