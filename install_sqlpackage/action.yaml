@@ -18,4 +18,4 @@ runs:
       unzip $HOME/sqlpackage/sqlpackage.zip -d $HOME/sqlpackage
       chmod a+x $HOME/sqlpackage/sqlpackage
       rm $HOME/sqlpackage/sqlpackage.zip
-      echo "{PATH=$PATH:/$HOME/sqlpackage}" >> $GITHUB_ENV
+      echo "PATH=$PATH:/$HOME/sqlpackage" >> $GITHUB_ENV
