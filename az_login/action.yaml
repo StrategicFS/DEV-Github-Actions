@@ -1,0 +1,23 @@
+# The Azure CLI action here: https://github.com/marketplace/actions/azure-cli-action
+# Runs in a docker container, which doesn't work if our runners are also docker containers.
+name: 'Run AZ Login'
+description: 'Login to the AZ CLI, allows scripts to use DefaultAzureCredential'
+inputs:
+  version:
+    description: 'The AZ CLI version to use. in the format "xx.yy.zz", such as "2.36.0". Logs in automatically, no further action needed.'
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: Install Azure CLI
+    shell: bash
+    run: |
+      AZ_CLI_VERSION=${{ inputs.version }}
+      sudo apt-get update
+      sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+      curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+      AZ_REPO=$(lsb_release -cs)
+      echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+      sudo apt-get update
+      sudo apt-get install azure-cli=${AZ_CLI_VERSION}-1~${AZ_REPO}
+      az login --identity

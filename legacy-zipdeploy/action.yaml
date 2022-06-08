@@ -1,0 +1,19 @@
+name: 'Zip Deploy'
+description: 'An action wrapping the legacy method to deploy to an app service / function app / standard logic app.'
+inputs:
+  app-name:
+    description: 'The Azure resource name of the app service to deploy to.'
+    required: true
+  package-path:
+    description: 'The relative path to the deployment package, including the filename. examples: "./someappname.zip" or "./project/service/appname.zip" '
+    required: true
+  deploy-credentials:
+    description: 'The GitHub secret that has the deployment credentials'
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: deploy
+    shell: bash
+    run: |
+      curl -X POST --fail -u '${{ inputs.deploy-credentials }}' --data-binary @"${{ inputs.package-path }}" 'https://${{ inputs.app-name }}.scm.azurewebsites.net/api/zipdeploy'            
