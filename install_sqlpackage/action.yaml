@@ -13,7 +13,9 @@ runs:
   - name: Install SqlPackage
     shell: bash
     run: |
-      curl -L "${{ inputs.download_url }}" -o /usr/local/bin/sqlpackage.zip
-      unzip /usr/local/bin/sqlpackage.zip /usr/local/bin/sqlpackage
-      chmod a+x /usr/local/bin/sqlpackage
-      rm /usr/local/bin/sqlpackage.zip
+      mkdir $HOME/sqlpackage
+      curl -L "${{ inputs.download_url }}" -o $HOME/sqlpackage/sqlpackage.zip
+      unzip $HOME/sqlpackage/sqlpackage.zip -d $HOME/sqlpackage
+      chmod a+x $HOME/sqlpackage/sqlpackage
+      rm $HOME/sqlpackage/sqlpackage.zip
+      echo "{PATH=$PATH:/$HOME/sqlpackage} >> $GITHUB_ENV
