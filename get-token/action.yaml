@@ -15,7 +15,7 @@ runs:
     id: pull_token
     shell: bash
     env:
-      TOKEN: null
+      TOKEN: "MASK ME"
     run: |
       echo "::add-mask::$TOKEN"
       TOKEN=$(az account get-access-token --resource ${{ inputs.resource_uri }} --query accessToken)
