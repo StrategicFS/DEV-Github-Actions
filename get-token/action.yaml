@@ -1,0 +1,24 @@
+# The Azure CLI action here: https://github.com/marketplace/actions/azure-cli-action
+# Runs in a docker container, which doesn't work if our runners are also docker containers.
+name: 'Pull Token'
+description: 'Pulls a token from Azure AD with the specified resource URI. Must already be logged into Azure CLI. (There is a composite action for that)'
+inputs:
+  resource_uri:
+    description: 'The resource URI to use when requesting a token'
+    required: true
+outputs:
+  token:
+    description: 'A token pulled for the specifed resource URI. The value is masked.'
+    value: ${{ steps.pull_token.outputs.token }}
+runs:
+  using: "composite"
+  steps:
+  - name: 'Pull Token'
+    id: pull_token
+    shell: bash
+    env:
+      TOKEN: null
+    run: |
+      echo "::add-mask::$TOKEN"
+      TOKEN=$(az account get-access-token --resource ${{ inputs.resource_uri }} --query accessToken)
+      echo "::set-output name=token::$(echo $TOKEN)"
