@@ -1,5 +1,3 @@
-# The Azure CLI action here: https://github.com/marketplace/actions/azure-cli-action
-# Runs in a docker container, which doesn't work if our runners are also docker containers.
 name: 'Pull Token'
 description: 'Pulls a token from Azure AD with the specified resource URI. Must already be logged into Azure CLI. (There is a composite action for that)'
 inputs:
