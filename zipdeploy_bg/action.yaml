@@ -15,6 +15,10 @@ inputs:
 
 runs:
   using: "composite"
+    # https://github.com/actions/setup-python/issues/459#issuecomment-1186759280
+    # GH self-hosted runners broken, see thread. This env setting is a temp fix.
+  env:
+    AGENT_TOOLSDIRECTORY: ${{ runner.tool_cache }}
   steps:
     - name: "Setup Python"
       uses: "actions/setup-python@v4"
