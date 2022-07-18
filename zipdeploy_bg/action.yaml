@@ -1,0 +1,29 @@
+name: "Blue / Green Zip Deploy"
+description: "Zip deploy to all services behind a specific traffic manager endpoint. This can be directly to an App Service / Function App, or to an App Service or Function App fronted by APIM."
+
+inputs:
+  tm-id:
+    description: "The Azure Resource ID of the target Traffic Manager Profile. Normally, this will be the STANDBY Traffic Manager Profile. Reach out to DevOps with any questions."
+    required: true
+  deployment-package:
+    description: "The path to the deploment package (zip file), relative to the current working directory (Where the action is running)."
+    required: true
+  python-version:
+    description: "The version of Python to use."
+    required: false
+    default: "3.10"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Setup Python"
+      uses: "actions/setup-python@v4"
+      with:
+        python-version: "${{ inputs.python-version }}"
+    - name: "Install Deps with Pip"
+      shell: "bash"
+      run: "python -m pip install --upgrade pip && pip install -r requirements.txt"
+    - name: "Deploy to enabled endpoints on Traffic Manager Profile"
+      id: "deploy"
+      shell: "bash"
+      run: "python deploy.py '${{ inputs.tm-id }}' '${{ inputs.deployment-package }}'"
