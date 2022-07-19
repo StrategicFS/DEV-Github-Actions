@@ -22,13 +22,8 @@ runs:
         python-version: "${{ inputs.python-version }}"
     - name: "Install Deps with Pip"
       shell: "bash"
-      run: |
-        pwd
-        ls -laht
-        cd ..
-        ls -laht
-        #python -m pip install --upgrade pip && pip install -r requirements.txt
+      run: "python -m pip install --upgrade pip && pip install -r ${{ github.action_path }}/requirements.txt"
     - name: "Deploy to enabled endpoints on Traffic Manager Profile"
       id: "deploy"
       shell: "bash"
-      run: "python deploy.py '${{ inputs.tm-id }}' '${{ inputs.deployment-package }}'"
+      run: "python ${{ github.action_path }}/deploy.py '${{ inputs.tm-id }}' '${{ inputs.deployment-package }}'"
