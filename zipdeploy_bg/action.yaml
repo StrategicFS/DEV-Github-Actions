@@ -25,7 +25,9 @@ runs:
       run: |
         pwd
         ls -laht
-        python -m pip install --upgrade pip && pip install -r requirements.txt
+        cd ..
+        ls -laht
+        #python -m pip install --upgrade pip && pip install -r requirements.txt
     - name: "Deploy to enabled endpoints on Traffic Manager Profile"
       id: "deploy"
       shell: "bash"
