@@ -5,7 +5,7 @@ inputs:
   tm-id:
     description: "The Azure Resource ID of the target Traffic Manager Profile. Normally, this will be the STANDBY Traffic Manager Profile. Reach out to DevOps with any questions."
     required: true
-  deployment-package:
+  package-filename:
     description: "The path to the deploment package (zip file), relative to the current working directory (Where the action is running)."
     required: true
   python-version:
@@ -26,4 +26,4 @@ runs:
     - name: "Deploy to enabled endpoints on Traffic Manager Profile"
       id: "deploy"
       shell: "bash"
-      run: "python ${{ github.action_path }}/deploy.py '${{ inputs.tm-id }}' '${{ inputs.deployment-package }}'"
+      run: "python ${{ github.action_path }}/deploy.py '${{ inputs.tm-id }}' '${{ inputs.package-filename }}'"
