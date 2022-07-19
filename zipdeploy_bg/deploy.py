@@ -361,7 +361,7 @@ def get_target_webapps(webapps: dict, target_hostnames: list):
                     'id': webapp['id'],
                 }
                 filtered_webapps.append(target)
-    message f'Got all webapps in target hostname list'
+    message = f'Got all webapps in target hostname list'
     logging.info(message)
     return filtered_webapps
 
