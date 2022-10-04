@@ -104,5 +104,5 @@ runs:
           enable_endpoints "${DISABLED_ENDPOINTS[@]}"
           disable_endpoints "${ENABLED_ENDPOINTS[@]}"
         else
-          echo "Failed to swap endpoints. Either there are no disabled endpoints or no enabled endpoints"
+          echo "Failed to swap endpoints. Either there are no disabled endpoints or no enabled endpoints"; exit 1
         fi
