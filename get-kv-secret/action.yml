@@ -19,7 +19,7 @@ runs:
     id: pull_secret
     shell: bash
     env:
-      SECRET: "MASK ME"
+      KV_SECRET: "MASK ME"
     run: |
       echo "::add-mask::$KV_SECRET"
       KV_SECRET=$(az keyvault secret show --name ${{ inputs.secret_name }} --vault-name ${{ inputs.keyvault_name }} --query "value")
