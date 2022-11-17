@@ -1,0 +1,26 @@
+# Composite action should take in keyvault name and a secret name, returning a masked secret value.
+name: 'Pull Secret'
+description: 'Pulls a secret from Azure AD with the specified Vault. Must already be logged into Azure CLI. (There is a composite action for that)'
+inputs:
+  keyvault_name :
+    description: 'The name of the Azure Keyvault to use when requesting a secret'
+    required: true
+  secret_name :
+    description: 'The name of the Keyvault Secret to retrieve from the Azure Keyvault'
+    required: true
+outputs:
+  secret:
+    description: 'A Secret pulled for the specifed resource URI. The value is masked.'
+    value: ${{ steps.pull_secret.outputs.secret }}
+runs:
+  using: "composite"
+  steps:
+  - name: 'Pull Secret'
+    id: pull_secret
+    shell: bash
+    env:
+      SECRET: "MASK ME"
+    run: |
+      echo "::add-mask::$KV_SECRET"
+      KV_SECRET=$(az keyvault secret show --name ${{ inputs.secret_name }} --vault-name ${{ inputs.keyvault_name }} --query "value")
+      echo "::set-output name=secret::$(echo $KV_SECRET)"
