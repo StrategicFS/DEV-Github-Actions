@@ -17,6 +17,6 @@ runs:
     env:
       TOKEN: "MASK ME"
     run: |
-      echo "::add-mask::$TOKEN"
       TOKEN=$(az account get-access-token --resource ${{ inputs.resource_uri }} --query accessToken)
+      echo "::add-mask::$TOKEN"
       echo "::set-output name=token::$(echo $TOKEN)"
