@@ -2,7 +2,7 @@ name: "Zip Deploy"
 description: "Zip deploy to an App Service / Func App / Standard Logic App zip deploy endpoint"
 inputs:
   app-name:
-    description: "The Azure resource name of the app service to deploy to."
+    description: "The Azure resource name of the app service to deploy to. The action looks for a zip file in the package-location by the same name."
     required: true
   package-location:
     description: "The relative path to the zip package to deploy, if not in the current directory. Do not include the trailing slash."
