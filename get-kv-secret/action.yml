@@ -23,4 +23,4 @@ runs:
     run: |
       KV_SECRET=$(az keyvault secret show --name ${{ inputs.secret_name }} --vault-name ${{ inputs.keyvault_name }} --query "value")
       echo "secret=$(echo $KV_SECRET)" >> $GITHUB_OUTPUT
-      echo $GITHUB_OUTPUT
+      $(echo $KV_SECRET)
