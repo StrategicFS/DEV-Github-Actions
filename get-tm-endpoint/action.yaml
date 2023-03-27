@@ -34,7 +34,7 @@ runs:
               echo "info: will deploy to $TM_DEPLOYMENT_TARGET_COLOR" 
               echo "info: will deploy to $TM_DEPLOYMENT_TARGET_APP_NAME" 
               echo "app-name=$(echo $TM_DEPLOYMENT_TARGET_APP_NAME)" >> $GITHUB_OUTPUT
-              echo ${{ $GITHUB_OUTPUT }}
+              echo $GITHUB_OUTPUT
           elif [[ $TM_DEPLOYMENT_TARGET_COUNT -gt 1 ]]; 
               then 
               echo "error: expected 1 deployment target, got ${TM_DEPLOYMENT_TARGET_COUNT}: $TM_DEPLOYMENT_TARGET_COLOR"
