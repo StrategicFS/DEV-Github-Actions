@@ -21,6 +21,7 @@ runs:
     env:
       KV_SECRET: "MASK ME"
     run: |
-      KV_SECRET=$(az keyvault secret show --name ${{ inputs.secret_name }} --vault-name ${{ inputs.keyvault_name }} --query "value")
       echo "::add-mask::$KV_SECRET"
-      echo "::set-output name=secret::$(echo $KV_SECRET)"
+      KV_SECRET=$(az keyvault secret show --name ${{ inputs.secret_name }} --vault-name ${{ inputs.keyvault_name }} --query "value")
+      echo "secret=$(echo $KV_SECRET)" >> $GITHUB_OUTPUT
+
