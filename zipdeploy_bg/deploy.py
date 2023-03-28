@@ -16,6 +16,8 @@ RG_CLIENT_API_VERSION = '2021-04-01'
 APIM_CLIENT_API_VERSION = '2021-08-01'
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('azure')
+logger.setLevel(logging.ERROR)
 
 
 def parse_script_args(args):
