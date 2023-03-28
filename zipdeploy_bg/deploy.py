@@ -4,6 +4,7 @@ import logging
 import xmltodict
 import requests
 import re
+import json
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.trafficmanager import TrafficManagerManagementClient
 from azure.mgmt.network import NetworkManagementClient
@@ -326,8 +327,30 @@ def filter_target_apis(apim_targets, all_apis):
             })
     message = f'got {len(target_apis)} APIM APIs from APIM targets'
     logging.info(message)
-    raise()
     return target_apis
+
+
+def select_target_apim_backend(conditions, tm_color):
+    logging.debug(f'will process a list of {len(conditions)} conditions objects')
+    tm_header_check_value = 'context.Request.Headers.GetValueOrDefault(\"tm-color\")'
+    matching_backends = []
+    for ct, con in enumerate(conditions):
+        if tm_header_check_value in con['@condition']:
+            if tm_color in con['@condition']:
+                base_url = con['set-backend-service']['@base-url']
+                logging.debug(f"Condition {ct+1} matched, adding {base_url}, to backend targets.")
+                matching_backends.append({ 
+                    'fqdn': base_url,
+                    'tm-color': tm_color,
+                    'rewrite_path': None,
+                })
+            else:
+                logging.debug(f'Condition {ct+1} header for tm-color was incorrect')
+        else:
+            logging.debug(f'Condition {ct+1} did not check for tm-color, or was looking for wrong tm-color')
+    logging.debug(f'processed a list of {len(conditions)} conditions objects')
+    logging.debug(f'Found the following backends: {matching_backends}')
+    return matching_backends
 
 
 def get_apim_policies(client: ApiManagementClient, apis, webapp_targets, apim_by_hostname_map):
@@ -346,17 +369,28 @@ def get_apim_policies(client: ApiManagementClient, apis, webapp_targets, apim_by
     for api in matching_api_policies:
         pol = api['policy']
         backends_policy = xmltodict.parse(pol)
-        backends = [
-            {
-                'fqdn': item['set-backend-service']['@base-url'],
-                'tm-color': item['@condition'].split('==')[1],
-            } for item in backends_policy['policies']['inbound']['choose']['when']]
-        filtered_backends = [
-            item for item in backends if api['tm-color'] in item['tm-color']
-        ]
-        backends_list = backends_list + filtered_backends
+        backends = []
+        choices = []
+        for k, v in backends_policy['policies']['inbound'].items():
+            if k == "choose" and type(v) == dict:
+                choices.append(v)
+            elif k == "choose" and type(v) == list:
+                for choice in v:
+                    choices.append(choice)
+        
+       
+        for choice in choices:
+            for backend in select_target_apim_backend(choice['when'], api['tm-color']):
+                backends.append(backend)
+        for item in backends:
+            if item not in backends_list:
+                if item != []:
+                    backends_list.append(item)
+    message = f'{backends_list}'
+    logging.debug(message)
     message = f'found apim target backends within api policies, combined with webapp targets'
     logging.info(message)
+    print(f' Found the following targets: {webapp_targets + backends_list}')
     return webapp_targets + backends_list
 
 
