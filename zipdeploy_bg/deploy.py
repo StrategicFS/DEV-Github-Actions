@@ -15,7 +15,7 @@ NETWORK_CLIENT_API_VERSION = '2021-02-01'
 RG_CLIENT_API_VERSION = '2021-04-01'
 APIM_CLIENT_API_VERSION = '2021-08-01'
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('azure')
 logger.setLevel(logging.ERROR)
 
@@ -192,16 +192,14 @@ def get_rewrite_rule_path(ruleset):
     rewrite_paths = []
     for rule in ruleset['rewrite_rules']:
         rewrite_paths.append(rule['action_set']['url_configuration']['modified_path'])
-    if len(rewrite_paths) > 1:
-        message = f'more than one rewrite rule affects the path.'
-        logging.error(message)
-        raise(RuntimeError)
-    elif rewrite_paths == []:
+    if rewrite_paths == []:
         message = f'rewrite rules do not contain an action set which modifies the url path'
         logging.error(message)
         raise(RuntimeError)
     else:
-        return rewrite_paths[0]
+        message = f'rewrite path: {rewrite_paths[0]}'
+        logging.debug(message)
+        return rewrite_paths
     
 
 def get_gateway_backends(gateways: dict, endpoints:dict, app_fqdn: str):
@@ -217,17 +215,18 @@ def get_gateway_backends(gateways: dict, endpoints:dict, app_fqdn: str):
         backend_fqdns = get_matching_backend_address_pool(gateway, request_routing_rule)
         rewrite_rule_set = get_matching_rewrite_rule_set(gateway, request_routing_rule)
         if rewrite_rule_set is None:
-            rewrite_path = None
+            rewrite_paths = [ None ]
         else:
-            rewrite_path = get_rewrite_rule_path(rewrite_rule_set)
+            rewrite_paths = get_rewrite_rule_path(rewrite_rule_set)
         for fqdn in backend_fqdns:
-            deployment_targets.append(
-                {
-                    'fqdn': fqdn,
-                    'rewrite_path': rewrite_path,
-                    'tm-color': gateway['tags']['Scope'],
-                }
-            )
+            for rewrite_path in rewrite_paths:
+                deployment_targets.append(
+                    {
+                        'fqdn': fqdn,
+                        'rewrite_path': rewrite_path,
+                        'tm-color': gateway['tags']['Scope'],
+                    }
+                )
     return deployment_targets
 
 
@@ -260,6 +259,10 @@ def filter_webapps(apim_by_hostname_map, targets):
     num_apims = len(apim_targets)
     message = f'split out {num_webapps} web apps and {num_apims} apim backends'
     logging.info(message)
+    message = f"webapps: {[ webapp for webapp in webapp_targets]}"
+    logging.debug(message)
+    message = f"apim backends: {[ apim_target for apim_target in apim_targets ]}"
+    logging.debug(message)
     return webapp_targets, apim_targets
 
 
@@ -289,6 +292,7 @@ def filter_target_apis(apim_targets, all_apis):
             message = f'will attempt to pull API version from rewrite path'
             logging.debug(message)
             api_version = target['rewrite_path'].split("/")[2]
+            logging.debug(api_version)
         except IndexError:
             message = f'API version not specified in path, will set to "None"'
             logging.debug(message)
@@ -317,6 +321,7 @@ def filter_target_apis(apim_targets, all_apis):
             })
     message = f'got {len(target_apis)} APIM APIs from APIM targets'
     logging.info(message)
+    raise()
     return target_apis
 
 
@@ -383,13 +388,13 @@ def summarize_deploy_results(results: list):
 
 
 def deploy_to_webapps(client: WebSiteManagementClient, target_webapps, deployment_package_path):
-    message = f'Will attempt to deploy to target backends'
+    message = f'Will attempt to deploy to target backends: {target_webapps}'
     logging.debug(message)
     target_hostnames = [target['fqdn'].replace('https://', '') for target in target_webapps]
     all_webapps = [webapp.as_dict() for webapp in client.web_apps.list()]
     filtered_webapps = get_target_webapps(all_webapps, target_hostnames)
+    results = []
     for webapp in filtered_webapps:
-        results = []
         creds = client.web_apps.begin_list_publishing_credentials(
             webapp['resource_group'],
             webapp['name'],
