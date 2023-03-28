@@ -3,6 +3,7 @@ import sys
 import logging
 import xmltodict
 import requests
+import re
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.trafficmanager import TrafficManagerManagementClient
 from azure.mgmt.network import NetworkManagementClient
@@ -185,13 +186,17 @@ def get_matching_rewrite_rule_set(gateway, routing_rule):
         return None
     for rewrite_rule_set in gateway['rewrite_rule_sets']:
         if rewrite_rule_set['id'] == rw_rule_set_id:
+            message = f'{rewrite_rule_set}'
+            logging.debug(message)
             return rewrite_rule_set
 
 
 def get_rewrite_rule_path(ruleset):
     rewrite_paths = []
     for rule in ruleset['rewrite_rules']:
-        rewrite_paths.append(rule['action_set']['url_configuration']['modified_path'])
+        dirty_url = rule['action_set']['url_configuration']['modified_path']
+        clean_url = re.sub(r"{[a-z\-\_0-9]*}", "", dirty_url)
+        rewrite_paths.append(clean_url)
     if rewrite_paths == []:
         message = f'rewrite rules do not contain an action set which modifies the url path'
         logging.error(message)
