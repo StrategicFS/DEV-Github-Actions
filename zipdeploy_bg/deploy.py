@@ -4,7 +4,6 @@ import logging
 import xmltodict
 import requests
 import re
-import json
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.trafficmanager import TrafficManagerManagementClient
 from azure.mgmt.network import NetworkManagementClient
