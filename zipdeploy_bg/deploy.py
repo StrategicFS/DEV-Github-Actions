@@ -17,7 +17,9 @@ NETWORK_CLIENT_API_VERSION = '2021-02-01'
 RG_CLIENT_API_VERSION = '2021-04-01'
 APIM_CLIENT_API_VERSION = '2021-08-01'
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+
+# Azure logging is noisier than what we need
 logger = logging.getLogger('azure')
 logger.setLevel(logging.ERROR)
 
@@ -137,6 +139,8 @@ def get_gateways_with_public_ip(gateways: dict, ip_ids: list):
 
 
 def get_matching_gateway_listener(gateway, app_fqdn):
+    message = f'Will get matching App Gateway Listener for: {app_fqdn}.'
+    logging.debug(message)
     matching_listeners = []
     for listener in gateway['http_listeners']:
         if listener['protocol'].lower() == "https" and app_fqdn in listener.get('host_name', []):
@@ -146,13 +150,21 @@ def get_matching_gateway_listener(gateway, app_fqdn):
         logging.error(message)
         raise(RuntimeError)
     elif matching_listeners == []:
+        message = f'Found no matching App Gateway Listener for {app_fqdn}.'
+        logging.info(message)
         return None
     else:
+        message = f'Found a matching App Gateway Listener for {app_fqdn}.'
+        logging.info(message)
         return matching_listeners[0]
 
 
 def get_matching_request_routing_rule(gateway, listener_id):
+    message = f'Finding a matching request routing rule for listener: {listener_id}.'
+    logging.debug(message)
     if listener_id is None:
+        message = f'Listener ID is "None".'
+        logging.info(message)
         return None
     matching_request_routing_rules = []
     for rule in gateway['request_routing_rules']:
@@ -163,13 +175,21 @@ def get_matching_request_routing_rule(gateway, listener_id):
         logging.error(message)
         raise(RuntimeError)
     elif matching_request_routing_rules == []:
+        message = f'Found no matching request routing rule.'
+        logging.info(message)
         return None
     else:
+        message = f'Found a matching request routing rule.'
+        logging.info(message)
         return matching_request_routing_rules[0]
 
 
 def get_matching_backend_address_pool(gateway, routing_rule):
+    message = f'Finding a matching backend address pool.'
+    logging.debug(message)
     if routing_rule is None:
+        message = f'Finding a matching backend address pool.'
+        logging.info(message)
         return []
     target_fqdns = []
     for pool in gateway['backend_address_pools']:
@@ -193,6 +213,8 @@ def get_matching_rewrite_rule_set(gateway, routing_rule):
 
 
 def get_rewrite_rule_path(ruleset):
+    message = f'Finding rewrite rule path.'
+    logging.debug(message)
     rewrite_paths = []
     for rule in ruleset['rewrite_rules']:
         dirty_url = rule['action_set']['url_configuration']['modified_path']
@@ -204,7 +226,7 @@ def get_rewrite_rule_path(ruleset):
         raise(RuntimeError)
     else:
         message = f'rewrite path: {rewrite_paths[0]}'
-        logging.debug(message)
+        logging.info(message)
         return rewrite_paths
     
 
@@ -233,6 +255,8 @@ def get_gateway_backends(gateways: dict, endpoints:dict, app_fqdn: str):
                         'tm-color': gateway['tags']['Scope'],
                     }
                 )
+    message = f'Pulled {len(deployment_targets)} gateway backend target(s).'
+    logging.info(message)
     return deployment_targets
 
 
@@ -325,7 +349,7 @@ def filter_target_apis(apim_targets, all_apis):
                 'api_version': api_version,
                 'tm-color': target['tm-color'],
             })
-    message = f'got {len(target_apis)} APIM APIs from APIM targets'
+    message = f'Got {len(target_apis)} APIM APIs from APIM targets.'
     logging.info(message)
     return target_apis
 
@@ -353,7 +377,7 @@ def select_target_apim_backend(conditions, tm_color):
     return matching_backends
 
 
-def get_apim_policies(client: ApiManagementClient, apis, webapp_targets, apim_by_hostname_map):
+def get_apim_policies(client: ApiManagementClient, apis, apim_by_hostname_map):
     message = f'will parse through policies to get API backends'
     logging.debug(message)
     matching_api_policies = []
@@ -365,6 +389,24 @@ def get_apim_policies(client: ApiManagementClient, apis, webapp_targets, apim_by
         )
         api['policy'] = [pol['value'] for pol in [item for item in target_api_policies.as_dict()['value']]][0].replace('\r\n', '')
         matching_api_policies.append(api)
+    return matching_api_policies
+
+def pull_backends_from_choices(api, choices):
+    backends = []
+    for choice in choices:
+        for backend in select_target_apim_backend(choice['when'], api['tm-color']):
+            backends.append(backend)
+    return backends
+
+def dedupe_apim_backends(backends):
+    backends_deduped = []
+    for item in backends:
+        if item not in backends_deduped:
+            if item != []:
+                backends_deduped.append(item)
+    return backends_deduped
+
+def get_apim_backends(matching_api_policies):
     backends_list = []
     for api in matching_api_policies:
         pol = api['policy']
@@ -377,21 +419,24 @@ def get_apim_policies(client: ApiManagementClient, apis, webapp_targets, apim_by
             elif k == "choose" and type(v) == list:
                 for choice in v:
                     choices.append(choice)
-        
-       
-        for choice in choices:
-            for backend in select_target_apim_backend(choice['when'], api['tm-color']):
-                backends.append(backend)
-        for item in backends:
-            if item not in backends_list:
-                if item != []:
-                    backends_list.append(item)
+        backends = pull_backends_from_choices(api, choices)
+        backends_list = dedupe_apim_backends(backends)
+        message = f"Found the following backend(s) for {api['api_name']}: {backends_list}"
+        logging.debug(message)
     message = f'{backends_list}'
     logging.debug(message)
-    message = f'found apim target backends within api policies, combined with webapp targets'
+    return backends_list
+
+
+def get_backend_targets(apim_targets, webapp_targets):
+    message = f' Found the following webapp targets: {webapp_targets}'
+    logging.debug(message)
+    message = f' Found the following apim targets: {apim_targets}'
+    logging.debug(message)
+    all_targets = apim_targets + webapp_targets
+    message = f'Combined webapp and apim targets: {all_targets}'
     logging.info(message)
-    print(f' Found the following targets: {webapp_targets + backends_list}')
-    return webapp_targets + backends_list
+    return all_targets
 
 
 def get_target_webapps(webapps: dict, target_hostnames: list):
@@ -490,7 +535,9 @@ def main():
     all_apis = get_apis(apim_client, apim_by_hostname_map)
     webapp_targets, apim_targets = filter_webapps(apim_by_hostname_map, gateway_backends)
     target_apis = filter_target_apis(apim_targets, all_apis)
-    all_targets = get_apim_policies(apim_client, target_apis, webapp_targets, apim_by_hostname_map)
+    apim_policies = get_apim_policies(apim_client, target_apis, apim_by_hostname_map)
+    apim_target_backends = get_apim_backends(apim_policies)
+    all_targets = get_backend_targets(apim_target_backends, webapp_targets)
 
     # Web App Stuff
     webapp_client = get_web_app_client(az_creds, sub_id)
