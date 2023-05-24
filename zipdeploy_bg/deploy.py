@@ -4,6 +4,7 @@ import logging
 import xmltodict
 import requests
 import re
+from urllib.parse import urlparse
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.trafficmanager import TrafficManagerManagementClient
 from azure.mgmt.network import NetworkManagementClient
@@ -90,7 +91,7 @@ def get_traffic_manager_profile(client: TrafficManagerManagementClient, rg_name:
     except:
         message = f'Failed to derive hostname from traffic manager profile'
         logging.error(message)
-        raise(RuntimeError)
+        raise RuntimeError(message)
     message = f'Will deploy to application serving {hostname}'
     logging.info(message)
     return profile, hostname
@@ -147,7 +148,7 @@ def get_matching_gateway_listener(gateway, app_fqdn):
     if len(matching_listeners) > 1:
         message = f'Found more than one matching listener. This is not expected behavior'
         logging.error(message)
-        raise(RuntimeError)
+        raise RuntimeError(message)
     elif matching_listeners == []:
         message = f'Found no matching App Gateway Listener for {app_fqdn}.'
         logging.info(message)
@@ -172,7 +173,7 @@ def get_matching_request_routing_rule(gateway, listener_id):
     if len(matching_request_routing_rules) > 1:
         message = f'Found more than one matching routing rule. This is not expected behavior'
         logging.error(message)
-        raise(RuntimeError)
+        raise RuntimeError(message)
     elif matching_request_routing_rules == []:
         message = f'Found no matching request routing rule.'
         logging.info(message)
@@ -222,7 +223,7 @@ def get_rewrite_rule_path(ruleset):
     if rewrite_paths == []:
         message = f'rewrite rules do not contain an action set which modifies the url path'
         logging.error(message)
-        raise(RuntimeError)
+        raise RuntimeError(message)
     else:
         message = f'rewrite path: {rewrite_paths[0]}'
         logging.info(message)
@@ -329,12 +330,12 @@ def filter_target_apis(apim_targets, all_apis):
         except AttributeError:
             message = f'If api_verson is already a None type, it can mean the there is no rewrite rule associated with the listener in the app gateway'
             logging.error(message)
-            raise(RuntimeError)
+            raise RuntimeError(message)
         except:
             bad_target_fqdn = target['fqdn']
             message = f'Parsing the "rewrite_path" attribute for {bad_target_fqdn} failed'
             logging.error(message)
-            raise(RuntimeError)
+            raise RuntimeError(message)
         api_path = target['rewrite_path'].split("/")[1]
         api_names = [api['name'] for api in all_apis[target['fqdn']] if api['path'] ==
                    api_path and api['api_version'] == api_version or api['path'] == api_path and api_version == None]
@@ -362,11 +363,17 @@ def select_target_apim_backend(conditions, tm_color):
             if tm_color in con['@condition']:
                 base_url = con['set-backend-service']['@base-url']
                 logging.debug(f"Condition {ct+1} matched, adding {base_url}, to backend targets.")
-                matching_backends.append({ 
-                    'fqdn': base_url,
-                    'tm-color': tm_color,
-                    'rewrite_path': None,
-                })
+                parsed_url = urlparse(base_url)
+                clean_url = f'{parsed_url.scheme}://{parsed_url.netloc}'
+                matched_backend = {
+                    'fqdn': clean_url,
+                     'tm-color': tm_color,
+                     'rewrite_path': None,
+                }
+                matching_backends.append(matched_backend)
+                message = f'Appended {matched_backend}'
+                logging.debug(message)
+
             else:
                 logging.debug(f'Condition {ct+1} header for tm-color was incorrect')
         else:
@@ -474,8 +481,17 @@ def deploy_to_webapps(client: WebSiteManagementClient, target_webapps, deploymen
     message = f'Will attempt to deploy to target backends: {target_webapps}'
     logging.debug(message)
     target_hostnames = [target['fqdn'].replace('https://', '') for target in target_webapps]
+    message = f'The target hostnames are: {target_hostnames}'
+    logging.debug(message)
     all_webapps = [webapp.as_dict() for webapp in client.web_apps.list()]
     filtered_webapps = get_target_webapps(all_webapps, target_hostnames)
+    all_webapps = [webapp.as_dict() for webapp in client.web_apps.list()]
+    filtered_webapps = get_target_webapps(all_webapps, target_hostnames)
+    message = f'Filtered out these webapps: {filtered_webapps}'
+    if filtered_webapps == []:
+        message = f'The filtered webapps came back empty! There is nothing to deploy to!'
+        logging.error(message)
+        raise RuntimeError(message)
     results = []
     for webapp in filtered_webapps:
         creds = client.web_apps.begin_list_publishing_credentials(
@@ -500,7 +516,7 @@ def deploy_to_webapps(client: WebSiteManagementClient, target_webapps, deploymen
     else:
         message = f'Failed to deploy to target(s): {results}'
         logging.error(message)
-        raise(RuntimeError)
+        raise RuntimeError(message)
     message = f'Deployment actions complete'
     logging.info(message)
     return results
