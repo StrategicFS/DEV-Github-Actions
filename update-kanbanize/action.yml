@@ -1,0 +1,34 @@
+name: 'Get Kanbanize ID'
+description: 'Derives the Kanbanize Card ID'
+inputs:
+  kanbanize-api-key:
+    description: 'An active API key for Kanbanize'
+    required: true
+  kanbanize-github-branch-custom-field-id: 
+    required: false
+  kanbanize-github-pull-request-custom-field-id: 
+    required: false
+  kanbanize-base-uri:
+    required: false
+    default: https://strategicfinancialsolutions6a.kanbanize.com/api/v2
+outputs:
+  kanbanize-card-id:
+    description: 'The Kanbanize Card ID'
+    value: ${{ steps.extract-kanbanize-id.outputs.kanbanize-card-id }}
+runs:
+  using: "composite"
+  steps:
+  - name: Extract Kanbanize ID from PR Title
+    id: extract-kanbanize-id-from-pr
+    if: ( github.event_name == 'create' && github.event.ref_type == 'branch' ) || github.event_name == 'pull_request'
+    env:
+      KANBANIZE_API_KEY: ${{ inputs.kanbanize-api-key }}
+      KANBANIZE_BASE_URI: ${{ inputs.kanbanize-base-uri }}
+      KANBANIZE_BRANCH_ID: ${{ inputs.kanbanize-github-branch-custom-field-id }}
+      KANBANIZE_PR_ID: ${{ inputs.kanbanize-github-pull-request-custom-field-id }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_ID: ${{ github.event.pull_request.id }}
+      BRANCH_REF: ${{ github.event.ref }}
+      EVENT_NAME: ${{ github.event_name }}
+      REPOSITORY: ${{ github.repository }}
+    run: ${{ github.action_path }}/script.sh
