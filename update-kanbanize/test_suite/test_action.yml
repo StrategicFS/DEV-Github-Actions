@@ -1,4 +1,5 @@
-name: various_create_tests
+name: run unit tests
+
 on:
   pull_request:
     types: [opened]
@@ -21,20 +22,15 @@ jobs:
         run: |
           echo '${{ github.event.pull_request.title }}'
 
-      # This is all that matters HERE, the rest is boiler plate testing
       - name: Update Kanbanize
         id: update-kanbanize
         uses: ./
         with:
           kanbanize-api-key: ${{ secrets.KANBANIZE_API_KEY }}
-          kanbanize-github-branch-custom-field-id: 
-          kanbanize-github-pull-request-custom-field-id: 3
-
       - name: Show Composite Output
         id: show-composite-output
         run: |
           echo 'Kanbanize Card ID: ${{ steps.update-kanbanize.outputs.kanbanize-card-id }}'
-      # This is all that matters ABOVE
       
       - name: Test Kanbanize Card Detected ID matches 1234
         id: test-kanbanize-card-detected-id
