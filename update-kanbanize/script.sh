@@ -4,6 +4,8 @@ set -ueo pipefail
 REGEX='[0-9]{3,}'
 TEST_STRING="${BRANCH_REF}${PR_TITLE}"
 
+echo "For details, please review the Summary"
+
 echo "### Update Kanbanize Summary" >> "${GITHUB_STEP_SUMMARY}"
 
 echo "Attempted to extract the *first matched* Kanbanize Card ID from '${TEST_STRING}' with the Regular Expression '${REGEX}'" >> "${GITHUB_STEP_SUMMARY}"
