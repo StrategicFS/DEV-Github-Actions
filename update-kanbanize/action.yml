@@ -36,4 +36,5 @@ runs:
       BRANCH_REF: ${{ github.event.ref }}
       EVENT_NAME: ${{ github.event_name }}
       REPOSITORY: ${{ github.repository }}
+    shell: bash
     run: ${{ github.action_path }}/script.sh
