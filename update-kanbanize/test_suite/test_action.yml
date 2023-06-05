@@ -1,0 +1,42 @@
+name: run unit tests
+
+on:
+  pull_request:
+    types: [opened]
+  create:
+
+jobs:
+  update-kanbanize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Show Full github Context
+        id: full-context
+        run: |
+          echo '${{ toJSON(github) }}'
+      - name: Show PR Title
+        id: pr-title
+        run: |
+          echo '${{ github.event.pull_request.title }}'
+
+      - name: Update Kanbanize
+        id: update-kanbanize
+        uses: ./
+        with:
+          kanbanize-api-key: ${{ secrets.KANBANIZE_API_KEY }}
+      - name: Show Composite Output
+        id: show-composite-output
+        run: |
+          echo 'Kanbanize Card ID: ${{ steps.update-kanbanize.outputs.kanbanize-card-id }}'
+      
+      - name: Test Kanbanize Card Detected ID matches 1234
+        id: test-kanbanize-card-detected-id
+        run: |
+          K_ID='${{ steps.update-kanbanize.outputs.kanbanize-card-id }}'
+          if [[ $K_ID -ne 1234 ]]; then
+            echo "Kabanize Card ID Detected is not 1234"
+            exit 1
+          fi

@@ -1,0 +1,40 @@
+name: 'Update Kabanize'
+description: 'Updates Kanbanize Card based on PR/Branch'
+inputs:
+  kanbanize-api-key:
+    description: 'An active API key for Kanbanize.  This is required as Composite actions do not receive Secrets in the default context.  This should be a secret!'
+    required: true
+  kanbanize-github-branch-custom-field-id: 
+    description: 'OPTIONAL: The internal Kanbanize ID for the Custom Field of Link Type which should be set with the Branch Link to Github'
+    required: false
+    default: 11
+  kanbanize-github-pull-request-custom-field-id: 
+    description: 'OPTIONAL: The internal Kanbanize ID for the Custom Field of Link Type which should be set with the Pull Request Link to Github'
+    required: false
+    default: 3
+  kanbanize-base-uri:
+    description: 'OPTIONAL: The Base URL for the Kanbanize Rest API'
+    required: false
+    default: https://strategicfinancialsolutions6a.kanbanize.com/api/v2
+outputs:
+  kanbanize-card-id:
+    description: 'The Kanbanize Card ID'
+    value: ${{ steps.extract-kanbanize-id.outputs.kanbanize-card-id }}
+runs:
+  using: "composite"
+  steps:
+  - name: Update Kanbanize
+    id: update-kanbanize
+    if: ( github.event_name == 'create' && github.event.ref_type == 'branch' ) || github.event_name == 'pull_request'
+    env:
+      KANBANIZE_API_KEY: ${{ inputs.kanbanize-api-key }}
+      KANBANIZE_BASE_URI: ${{ inputs.kanbanize-base-uri }}
+      KANBANIZE_BRANCH_ID: ${{ inputs.kanbanize-github-branch-custom-field-id }}
+      KANBANIZE_PR_ID: ${{ inputs.kanbanize-github-pull-request-custom-field-id }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_ID: ${{ github.event.pull_request.id }}
+      BRANCH_REF: ${{ github.event.ref }}
+      EVENT_NAME: ${{ github.event_name }}
+      REPOSITORY: ${{ github.repository }}
+    shell: bash
+    run: ${{ github.action_path }}/script.sh

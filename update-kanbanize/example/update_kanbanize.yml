@@ -1,0 +1,16 @@
+name: Update Kanbanize
+
+on:
+  pull_request:
+    types: [opened]
+  create:
+
+jobs:
+  update-kanbanize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Kanbanize
+        id: update-kanbanize
+        uses: StrategicFS/DEV-GitHub-Actions/update-kanbanize@master
+        with:
+          kanbanize-api-key: ${{ secrets.KANBANIZE_API_KEY }}

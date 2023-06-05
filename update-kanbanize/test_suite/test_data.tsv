@@ -1,0 +1,18 @@
+SUCCEED	pull_request	KZ-1234 This is PR 1
+SUCCEED	pull_request	[KZ-1234] This is PR 2
+SUCCEED	pull_request	This is PR 3 KZ-1234
+SUCCEED	pull_request	This is PR 4 [KZ-1234]
+FAIL	pull_request	This is PR 5 [KZ-12]
+FAIL	pull_request	This is a junk PR 6 with no ID
+SUCCEED	pull_request	1234 PR 7 test
+SUCCEED	pull_request	[1234] This is a test PR 8 with [1235] multiple IDs [1230] but should only ever pick the first match
+SUCCEED	create	kz-1234
+SUCCEED	create	kz-1234/feature
+SUCCEED	create	feature/kz-1234
+SUCCEED	create	1234
+SUCCEED	create	feature/1234
+SUCCEED	create	1234/feature
+FAIL	create	some-branch-with-no-id
+FAIL	create	feature/test
+SUCCEED	create	feature/test/1234
+SUCCEED	create	cnickoloff/id-1234/do-stuff
