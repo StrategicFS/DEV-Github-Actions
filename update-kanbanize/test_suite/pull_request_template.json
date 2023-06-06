@@ -1,6 +1,6 @@
 {
+  "number": 1234,
   "pull_request": {
-    "title": "PR_TITLE",
-    "id": 1234
+    "title": "PR_TITLE"
   }
 }
