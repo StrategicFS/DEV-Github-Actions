@@ -32,7 +32,7 @@ runs:
       KANBANIZE_BRANCH_ID: ${{ inputs.kanbanize-github-branch-custom-field-id }}
       KANBANIZE_PR_ID: ${{ inputs.kanbanize-github-pull-request-custom-field-id }}
       PR_TITLE: ${{ github.event.pull_request.title }}
-      PR_ID: ${{ github.event.pull_request.id }}
+      PR_ID: ${{ github.event.number }}
       BRANCH_REF: ${{ github.event.ref }}
       EVENT_NAME: ${{ github.event_name }}
       REPOSITORY: ${{ github.repository }}
