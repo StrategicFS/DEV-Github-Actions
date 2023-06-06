@@ -143,9 +143,11 @@ def get_matching_gateway_listener(gateway, app_fqdn):
     logging.debug(message)
     matching_listeners = []
     for listener in gateway['http_listeners']:
-        if listener['protocol'].lower() == "https" and app_fqdn in listener.get('host_name', []):
+        if listener['protocol'].lower() == "https" and app_fqdn == listener.get('host_name', []):
             matching_listeners.append(listener['id'])
     if len(matching_listeners) > 1:
+        message = f'found listeners: {matching_listeners}'
+        logging.info(message)
         message = f'Found more than one matching listener. This is not expected behavior'
         logging.error(message)
         raise RuntimeError(message)
