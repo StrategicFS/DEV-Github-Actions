@@ -2,7 +2,7 @@ name: Update Kanbanize
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, edited]
   create:
 
 jobs:
