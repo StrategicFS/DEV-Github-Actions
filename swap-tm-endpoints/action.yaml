@@ -83,7 +83,19 @@ runs:
 
         PROFILE_ID=${{ inputs.tm-id }}
         echo "Generating token for GitHub Runner"
-        ACCESS_TOKEN=$(curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com' -H Metadata:true -s | jq -r .access_token)
+
+        if [[ ! $(which az) ]];
+          then
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates curl apt-transport-https lsb-release gnupg
+            curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+            AZ_REPO=$(lsb_release -cs)
+            echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+            sudo apt-get update
+            sudo apt-get install azure-cli=2.48.1-1~${AZ_REPO}
+        fi
+
+        ACCESS_TOKEN=$(az account get-access-token | jq -r .accessToken)
 
         PROFILE_ATTRIBUTES=$(curl -X GET "https://management.azure.com$PROFILE_ID?api-version=2018-04-01" -H "Authorization: Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json")
 
