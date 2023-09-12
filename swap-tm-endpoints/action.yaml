@@ -94,6 +94,7 @@ runs:
             sudo apt-get update
             sudo apt-get install azure-cli=2.48.1-1~${AZ_REPO}
         fi
+        az login --identity
 
         ACCESS_TOKEN=$(az account get-access-token | jq -r .accessToken)
 
