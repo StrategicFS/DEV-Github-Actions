@@ -42,6 +42,6 @@ if [[ $TM_DEPLOYMENT_TARGET_COUNT -eq 1 ]];
         echo "error: expected 1 deployment target, got ${TM_DEPLOYMENT_TARGET_COUNT}: $TM_DEPLOYMENT_TARGET_COLOR"
         exit 1
     else 
-        echo "error: you may not be logged in to the azure cli. expected expected a number, got: $TM_DEPLOYMENT_TARGET_COUNT"
+        echo "error: you may not be logged in to the azure cli. expected a number, got: $TM_DEPLOYMENT_TARGET_COUNT"
         exit 1
 fi
