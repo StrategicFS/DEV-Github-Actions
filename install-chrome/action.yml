@@ -1,0 +1,32 @@
+name: Install Chrome
+description: "Install the current stable version of Chrome."
+outputs:
+  version:
+    description: "Major version of Chrome to be used for installing the matching Chromedriver"
+    value: ${{ steps.get-chrome-version.outputs.version }}
+runs:
+  using: "composite"
+  steps: 
+    - id: get-chrome-version
+      run: |
+        sudo apt-get update 
+        sudo apt-get clean 
+        sudo apt-get install -y wget 
+        wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+        echo 'deb http://dl.google.com/linux/chrome/deb/ stable main' | sudo tee -a /etc/apt/sources.list.d/google.list 
+        sudo apt-get -y update
+        sudo apt-get install -y google-chrome-stable
+        CHROME_PATH=$(which google-chrome)
+        
+        if [ -z "$CHROME_PATH" ]; then
+          echo "Chrome is not found in PATH"
+        else 
+            echo "👉 Chrome found at $CHROME_PATH" 
+            CHROME_VERSION=$($CHROME_PATH --version)
+            echo "👉 Chrome version: $CHROME_VERSION"
+
+            MAJOR_VERSION="$(echo "$CHROME_VERSION" | awk '/Google Chrome/{print $3}' | cut -d. -f1)"
+            echo "👉 Major release version of Chromedriver should be $MAJOR_VERSION"
+            echo "version=$MAJOR_VERSION" >> "$GITHUB_OUTPUT"
+        fi
+      shell: bash
