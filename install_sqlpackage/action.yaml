@@ -1,0 +1,21 @@
+# The Azure CLI action here: https://github.com/marketplace/actions/azure-cli-action
+# Runs in a docker container, which doesn't work if our runners are also docker containers.
+name: 'Install SqlPackage'
+description: 'Install SqlPackage'
+inputs:
+  download_url:
+    description: "The URL from which to download SqlPackage. MS didn't make it easy to specify a version/build number in a predictable URL, so this is what we get. Use 'https://aka.ms/sqlpackage-linux' for the latest."
+    required: false
+    default: "https://aka.ms/sqlpackage-linux"
+runs:
+  using: "composite"
+  steps:
+  - name: Install SqlPackage
+    shell: bash
+    run: |
+      mkdir $HOME/sqlpackage
+      curl -L "${{ inputs.download_url }}" -o $HOME/sqlpackage/sqlpackage.zip
+      unzip $HOME/sqlpackage/sqlpackage.zip -d $HOME/sqlpackage
+      chmod a+x $HOME/sqlpackage/sqlpackage
+      rm $HOME/sqlpackage/sqlpackage.zip
+      echo "PATH=$PATH:$HOME/sqlpackage" >> $GITHUB_ENV
